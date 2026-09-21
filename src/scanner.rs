@@ -39,9 +39,23 @@ impl Scanner {
     }
 
     fn string(&mut self) {
-        // TODO(you): scan a string literal. A string may span lines (1.5); an unterminated one
-        //            is reported at the line it opened on (5.1).
-        todo!("string")
+        // Spec 1.5: a string is any run of characters between two quotes and may span
+        // lines, so every newline inside it moves the line counter. An unterminated
+        // string is reported at the line it opened on.
+        let open_line = self.line;
+        while !self.at_end() && self.peek() != '"' {
+            let c = self.advance();
+            if c == '\n' {
+                self.line += 1;
+            }
+        }
+        if self.at_end() {
+            self.error(open_line, "String is never closed.");
+            return;
+        }
+        self.advance(); // the closing quote
+        self.line += 1;
+        self.add(TokenType::Str);
     }
 
     fn number(&mut self) {
